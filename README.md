@@ -18,27 +18,54 @@ This project provides an interactive presentation for upper-level executives to 
 ## 🛠️ Data Architecture & Modeling
 
 ### 1. Data Cleaning & Transformation (Power Query)
-* Raw data sets (sales, customer, product, store) were transformed in Power Query Editor.
-* Correct data types within date/time, string, or numeric fields were applied.
-* A continuous and up-to-date M-code calendar dimension was created (Dim_Date) spanning 2020 through 2026.
+- Raw datasets (sales, customer, product, store) were transformed in Power Query Editor.
+- Correct data types within date/time, string, or numeric fields were applied.
+- A continuous and up-to-date M-code calendar dimension was created (`Dim_Date`) spanning 2020 through 2026.
 
 ### 2. Star Schema Data Model
-Designing a high-performance Star Schema data model utilizing a $1: \$ ratio connecting four dimension tables to the fact table:* `Transactions` (Fact Table)
-* `Customers` (Dimension Table via `CustomerID`)
-* `Products` (Dimension Table via `ProductID`)
-* `Stores` (Dimension Table via `StoreID`)
-* `Dim_Date` (Dimension Table via `Date`)
+Designed a high-performance Star Schema data model utilizing a $1:*$ relationship strategy connecting four dimension tables to the central fact table:
+- `Transactions` (Fact Table)
+- `Customers` (Dimension Table via `CustomerID`)
+- `Products` (Dimension Table via `ProductID`)
+- `Stores` (Dimension Table via `StoreID`)
+- `Dim_Date` (Dimension Table via `Date`)
 
 ---
 
 ## 🧮 Key DAX Measures Created
 
-To analyze the business process without affecting the data storage performance, all key business metrics were calculated using explicit DAX measures, which were stored in a dedicated `_Measures` table:
+To analyze the business process without affecting data storage performance, all key business metrics were calculated using explicit DAX measures stored in a dedicated `_Measures` table:
 
-* **Total Revenue:**
-  ```dax
-  Total Revenue = 
-  SUMX(
-      Transactions,
-      Transactions[Quantity] * RELATED(Products[UnitPrice]) * (1 - Transactions[Discount])
-  )
+```dax
+-- 1. Total Revenue
+Total Revenue = 
+SUMX(
+    Transactions,
+    Transactions[Quantity] * RELATED(Products[UnitPrice]) * (1 - Transactions[Discount])
+)
+```
+
+```dax
+-- 2. Total Cost
+Total Cost = 
+SUMX(
+    Transactions,
+    Transactions[Quantity] * RELATED(Products[CostPrice])
+)
+```
+
+```dax
+-- 3. Total Profit
+Total Profit = [Total Revenue] - [Total Cost]
+```
+
+```dax
+-- 4. Profit Margin %
+Profit Margin % = 
+DIVIDE([Total Profit], [Total Revenue], 0)
+```
+
+```dax
+-- 5. Total Orders
+Total Orders = DISTINCTCOUNT(Transactions[TransactionID])
+```
